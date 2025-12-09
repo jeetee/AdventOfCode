@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include <numeric>
+#include <regex>
 #include <vector>
 
 using std::cout;
@@ -30,7 +31,7 @@ static void logic(string fileName)
     std::ifstream input(fileName);
 
     uint64_t low_bound = 0;
-    vector<uint64_t> invalid_ids;
+    vector<uint64_t> invalid_ids_part_one, invalid_ids_part_two;
 
     while (input >> low_bound) {
         cout << "." << std::flush; // Progress report
@@ -43,19 +44,31 @@ static void logic(string fileName)
             std::stringstream ss;
             ss << id;
             const auto sv = ss.view();
-            auto num_chars = sv.length();
-            // Can only be invalid if amount of characters is even
-            if (num_chars % 2) {
-                continue;
+            const auto num_chars = sv.length() / 2;
+            bool is_valid = true;
+
+            for (auto regex_len = 1; (regex_len <= num_chars) && is_valid; ++regex_len) {
+                if ((sv.length() % regex_len) != 0) {
+                    // Can't be invalid if pattern doesn't fit exactly into total number
+                    continue;
+                }
+                std::stringstream regexbuild;
+                regexbuild << "^(" << sv.substr(0, regex_len) << ")+$";
+                std::regex pattern(regexbuild.str());
+                if (std::regex_match(ss.str(), pattern)) {
+                    cout << ' ' << id << ' ';
+                    invalid_ids_part_two.emplace_back(id);
+                    is_valid = false;
+                }
             }
 
-            num_chars /= 2;
             if (sv.substr(0, num_chars).compare(sv.substr(num_chars)) == 0) {
-                cout << ' ' << id << ' ';
-                invalid_ids.emplace_back(id);
+                //cout << ' ' << id << ' ';
+                invalid_ids_part_one.emplace_back(id);
             }
         }
     }
 
-    cout << "\nSum of invalid IDs = " << std::accumulate(invalid_ids.cbegin(), invalid_ids.cend(), 0ul) << endl;
+    cout << "\nSum of invalid IDs 1 = " << std::accumulate(invalid_ids_part_one.cbegin(), invalid_ids_part_one.cend(), 0ul)
+         << "\nSum of invalid IDs 2 = " << std::accumulate(invalid_ids_part_two.cbegin(), invalid_ids_part_two.cend(), 0ul) << endl;
 }
