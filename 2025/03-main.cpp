@@ -55,13 +55,16 @@ static void logic(string fileName)
     cout << "Processing " << fileName << " file " << endl;
     std::ifstream input(fileName);
 
-    uint64_t joltage = 0;
+    uint64_t joltage = 0, big_joltage = 0;
 
     for (string line; std::getline(input, line);) {
         cout << "." << std::flush; // Progress report
 
         joltage += find_joltage(line, 2);
+        cout << '|';
+        big_joltage += find_joltage(line, 12);
     }
 
-    cout << "\nTotal joltage = " << joltage << endl;
+    cout << "\nTotal joltage = " << joltage
+         << "\nTotal big joltage = " << big_joltage << endl;
 }
