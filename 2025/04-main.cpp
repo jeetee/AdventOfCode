@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdint>
 
+#include <iterator>
 #include <numeric>
 #include <vector>
 
@@ -24,26 +25,17 @@ int main()
     return 0;
 }
 
-static void logic(string fileName)
+static vector<string> remove_reachable_rolls(vector<string>& floorplan, int& amount_removed)
 {
-    cout << "Processing " << fileName << " file " << endl;
-    std::ifstream input(fileName);
-
-    vector<string> floorplan;
-
-    for (string line; std::getline(input, line);) {
-        floorplan.emplace_back(line);
-    }
+    vector<string> copy = floorplan;
 
     const size_t height = floorplan.size();
     const size_t width = floorplan.front().size();
-    cout << "\nFloorplan measures " << height << " rows by " << width << " columns." << endl;
 
     int reachable_rolls_count = 0;
     for (auto h = height; h --> 0;) {
         for (auto w = width; w --> 0;) {
             if (floorplan[h][w] != '@') {
-                cout << floorplan[h][w] << std::flush; // Progress report
                 continue;
             }
 
@@ -78,14 +70,38 @@ static void logic(string fileName)
 
             if (surrounding_rolls_count < 4) {
                 ++reachable_rolls_count;
-                cout << 'x' << std::flush; // Progress report
-            }
-            else {
-                cout << floorplan[h][w] << std::flush; // Progress report
+                copy[h][w] = 'x'; // Remove indicator
             }
         }
-        cout << endl;
     }
 
+    amount_removed = reachable_rolls_count;
+    return copy;
+}
+
+static void logic(string fileName)
+{
+    cout << "Processing " << fileName << " file " << endl;
+    std::ifstream input(fileName);
+
+    vector<string> floorplan;
+
+    for (string line; std::getline(input, line);) {
+        floorplan.emplace_back(line);
+    }
+
+    // PART 1
+    int reachable_rolls_count;
+    auto resulting_floorplan = remove_reachable_rolls(floorplan, reachable_rolls_count);
     cout << "\nReachable rolls = " << reachable_rolls_count << endl;
+
+    // PART 2
+    int total_removed_rolls_count = 0;
+    while (reachable_rolls_count != 0) {
+        total_removed_rolls_count += reachable_rolls_count;
+        resulting_floorplan = remove_reachable_rolls(resulting_floorplan, reachable_rolls_count);
+    }
+    std::copy(resulting_floorplan.cbegin(), resulting_floorplan.cend(), std::ostream_iterator<string>(cout, "\n"));
+
+    cout << "Total removed rolls = " << total_removed_rolls_count << endl;
 }
