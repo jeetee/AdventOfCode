@@ -1,0 +1,91 @@
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <cstdint>
+
+#include <numeric>
+#include <vector>
+
+using std::cout;
+using std::endl;
+using std::string;
+using std::string_literals::operator""s;
+using std::vector;
+
+static void logic(string fileName);
+
+int main()
+{
+    cout << "Advent of Code 2025: 04\n";
+    logic("04-example.txt"s);
+    cout << endl;
+    logic("04-input.txt"s);
+    return 0;
+}
+
+static void logic(string fileName)
+{
+    cout << "Processing " << fileName << " file " << endl;
+    std::ifstream input(fileName);
+
+    vector<string> floorplan;
+
+    for (string line; std::getline(input, line);) {
+        floorplan.emplace_back(line);
+    }
+
+    const size_t height = floorplan.size();
+    const size_t width = floorplan.front().size();
+    cout << "\nFloorplan measures " << height << " rows by " << width << " columns." << endl;
+
+    int reachable_rolls_count = 0;
+    for (auto h = height; h --> 0;) {
+        for (auto w = width; w --> 0;) {
+            if (floorplan[h][w] != '@') {
+                cout << floorplan[h][w] << std::flush; // Progress report
+                continue;
+            }
+
+            int surrounding_rolls_count = 0;
+            // Row above me
+            if ((h > 0) && (w > 0) && (floorplan[h-1][w-1] == '@')) {
+                ++surrounding_rolls_count;
+            }
+            if ((h > 0) && (floorplan[h-1][w] == '@')) {
+                ++surrounding_rolls_count;
+            }
+            if ((h > 0) && (w < width-1) && (floorplan[h-1][w+1] == '@')) {
+                ++surrounding_rolls_count;
+            }
+            // Same row, neighbors
+            if ((w > 0) && (floorplan[h][w-1] == '@')) {
+                ++surrounding_rolls_count;
+            }
+            if ((w < width-1) && (floorplan[h][w+1] == '@')) {
+                ++surrounding_rolls_count;
+            }
+            // Row below me
+            if ((h < height-1) && (w > 0) && (floorplan[h+1][w-1] == '@')) {
+                ++surrounding_rolls_count;
+            }
+            if ((h < height-1) && (floorplan[h+1][w] == '@')) {
+                ++surrounding_rolls_count;
+            }
+            if ((h < height-1) && (w < width-1) && (floorplan[h+1][w+1] == '@')) {
+                ++surrounding_rolls_count;
+            }
+
+            if (surrounding_rolls_count < 4) {
+                ++reachable_rolls_count;
+                cout << 'x' << std::flush; // Progress report
+            }
+            else {
+                cout << floorplan[h][w] << std::flush; // Progress report
+            }
+        }
+        cout << endl;
+    }
+
+    cout << "\nReachable rolls = " << reachable_rolls_count << endl;
+}
