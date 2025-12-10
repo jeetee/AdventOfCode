@@ -25,6 +25,31 @@ int main()
     return 0;
 }
 
+static uint64_t find_joltage(const string numstr, const int digits)
+{
+    std::stringstream joltage_chars;
+    // First digit must be far enough from the end to allow room for the full number
+    size_t start_pos = 0, end_pos = numstr.length() - digits;
+    for (int digits_to_find = digits; digits_to_find --> 0;) {
+
+        for (char digit = '9'; digit > '0'; --digit) {
+            auto pos = numstr.find(digit, start_pos);
+            if ((pos != string::npos) && (pos <= end_pos)) {
+                joltage_chars << digit;
+                start_pos = pos + 1; // Next digit to be found past me
+                break;
+            }
+        }
+
+        // Next digit can be up to one pos closer to the end of the string
+        ++end_pos;
+    }
+    uint64_t joltage;
+    joltage_chars >> joltage;
+    cout << joltage;
+    return joltage;
+}
+
 static void logic(string fileName)
 {
     cout << "Processing " << fileName << " file " << endl;
@@ -35,27 +60,7 @@ static void logic(string fileName)
     for (string line; std::getline(input, line);) {
         cout << "." << std::flush; // Progress report
 
-        char digit = '9';
-        size_t tens_pos;
-        for (; digit > '0'; --digit) {
-            tens_pos = line.find(digit, 0);
-            if ((tens_pos != string::npos) && (tens_pos < line.size()-1)) {
-                cout << digit;
-                break;
-            }
-        }
-
-        joltage += 10 * (digit - '0');
-
-        // Locate 2nd digit
-        for (digit = '9'; digit > '0'; --digit) {
-            auto pos = line.find(digit, tens_pos+1);
-            if ((pos != string::npos) && (pos < line.size())) {
-                cout << digit;
-                break;
-            }
-        }
-        joltage += digit - '0';
+        joltage += find_joltage(line, 2);
     }
 
     cout << "\nTotal joltage = " << joltage << endl;
