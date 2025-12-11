@@ -31,7 +31,7 @@ static void logic(string fileName)
     cout << "Processing " << fileName << " file " << endl;
     std::ifstream input(fileName);
 
-    vector<std::pair<int,int>> valid_ranges;
+    vector<std::pair<uint64_t,uint64_t>> valid_ranges;
 
     for (string line; std::getline(input, line) && !line.empty();) {
         std::stringstream ss(line);
