@@ -36,7 +36,7 @@ static void logic(string fileName)
     cout << "Processing " << fileName << " file " << endl;
     std::ifstream input(fileName);
 
-    vector<math_problem_t> math_problems;
+    vector<math_problem_t> math_problems, math_problems_two;
     { // Scope input parsing
         vector<string> lines;
         for (string line; std::getline(input, line) && !line.empty();) {
@@ -50,6 +50,7 @@ static void logic(string fileName)
                 .operation = c
             });
         }
+        std::copy(std::execution::par, std::begin(math_problems), std::end(math_problems), std::back_inserter(math_problems_two));
 
         for (auto line = std::begin(lines); line != std::prev(std::end(lines)); ++line) {
             ss.clear();
@@ -58,17 +59,39 @@ static void logic(string fileName)
                 math_problems[i].terms.emplace_back(term);
             }
         }
+
+        // Part 2 needs vertical parsing
+        auto math_problem_it = std::rbegin(math_problems_two);
+        for (auto col = lines.front().size(); col --> 0; ) {
+            ss.clear();
+            ss.str("");
+            for (auto line = std::cbegin(lines); line != std::prev(std::cend(lines)); ++line) {
+                ss << (char)((*line)[col]);
+            }
+            uint64_t term;
+            if (ss >> term) {
+                math_problem_it->terms.emplace_back(term);
+            }
+            else {
+                ++math_problem_it;
+            }
+        }
     }
 
-    const uint64_t grand_total = std::transform_reduce(std::execution::par, std::begin(math_problems), std::end(math_problems),
-                                                       0ul, std::plus{},
-                                                       [](const math_problem_t& math_problem) {
-        return std::reduce(std::execution::par, std::begin(math_problem.terms), std::end(math_problem.terms),
-                           (math_problem.operation == '+') ? 0ul : 1ul,
-                           [&math_problem](uint64_t a, uint64_t b) {
-                                return (math_problem.operation == '+') ? (a + b) : (a * b);
-                            });
-    });
+    auto calc_grand_total = [](vector<math_problem_t>& problems) {
+        return std::transform_reduce(std::execution::par, std::begin(problems), std::end(problems),
+                                     0ul, std::plus{},
+                                     [](const math_problem_t& math_problem) {
+                                         return std::reduce(std::execution::par, std::begin(math_problem.terms), std::end(math_problem.terms),
+                                                            (math_problem.operation == '+') ? 0ul : 1ul,
+                                                            [&math_problem](uint64_t a, uint64_t b) {
+                                                                return (math_problem.operation == '+') ? (a + b) : (a * b);
+                                                            });
+                                     });
+    };
 
-    cout << "\nGrand total = " << grand_total << endl;
+    const uint64_t grand_total = calc_grand_total(math_problems);
+
+    cout << "\nGrand total = " << grand_total
+         << "\n2nd grand total = " << calc_grand_total(math_problems_two) << endl;
 }
