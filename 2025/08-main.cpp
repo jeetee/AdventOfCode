@@ -75,7 +75,8 @@ static void logic(string fileName, int connection_count)
 
     cout << "Building circuits " << endl;
     vector<vector<point_t *>> circuits;
-    for (auto closest = std::begin(distance_between_points); closest != std::next(std::begin(distance_between_points), connection_count); ++closest) {
+
+    auto connect = [&circuits](std::multiset<pointpair_t>::iterator closest) {
         if (closest->p1->circuitIdx == -1) {
             // P1 is not part of a circuit
             if (closest->p2->circuitIdx != -1) {
@@ -109,14 +110,33 @@ static void logic(string fileName, int connection_count)
                 circuits[old_circuit].clear();
             }
         }
+        // Return resulting circuitIdx
+        return closest->p1->circuitIdx;
+    };
+
+    for (auto closest = std::begin(distance_between_points); closest != std::next(std::begin(distance_between_points), connection_count); ++closest) {
+        connect(closest);
     }
 
     // Sort by circuit size (note, this breaks circuitIdx references inside the point_s data
-    std::sort(std::execution::par, std::begin(circuits), std::end(circuits), [](vector<point_t *>& a, vector<point_t *>& b){
+    vector<vector<point_t *>> sorted_circuits;
+    sorted_circuits = circuits;
+    std::sort(std::execution::par, std::begin(sorted_circuits), std::end(sorted_circuits), [](vector<point_t *>& a, vector<point_t *>& b){
         return a.size() > b.size();
     });
 
-    const auto top_circuit_sizes_mult = circuits[0].size() * circuits[1].size() * circuits[2].size();
+    const auto top_circuit_sizes_mult = sorted_circuits[0].size() * sorted_circuits[1].size() * sorted_circuits[2].size();
 
     cout << "\nThree largest circuit sizes multiplied = " << top_circuit_sizes_mult << endl;
+
+    // PART 2 - continue connecting till everything is connected into a single circuit
+    for (auto closest = std::next(std::begin(distance_between_points), connection_count); closest != std::end(distance_between_points); ++closest) {
+        auto circuitIdx = connect(closest);
+        if (circuits[circuitIdx].size() == points.size()) {
+            cout << "\nLast two junction boxes: " << closest->p1->x << "," << closest->p1->y << "," << closest->p1->z
+                 << " and " << closest->p2->x << "," << closest->p2->y << "," << closest->p2->z
+                 << "\n X mult = " << (closest->p1->x * (uint64_t)(closest->p2->x)) << endl;
+            break;
+        }
+    }
 }
