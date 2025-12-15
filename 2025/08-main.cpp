@@ -65,9 +65,9 @@ static void logic(string fileName, int connection_count)
     for (auto p1 = std::begin(points); p1 != std::prev(std::end(points)); ++p1) {
         for (auto p2 = std::next(p1); p2 != std::end(points); ++p2) {
             // As we only need to compare distances, there's no need to square them all
-            uint64_t distance = (p1->x - p2->x) * (p1->x - p2->x);
-            distance += (p1->y - p2->y) * (p1->y - p2->y);
-            distance += (p1->z - p2->z) * (p1->z - p2->z);
+            uint64_t distance = (p1->x - p2->x) * (int64_t)(p1->x - p2->x);
+            distance += (p1->y - p2->y) * (int64_t)(p1->y - p2->y);
+            distance += (p1->z - p2->z) * (int64_t)(p1->z - p2->z);
             distance_between_points.emplace(distance, &*p1, &*p2);
         }
         cout << '.' << std::flush; // Progress report
